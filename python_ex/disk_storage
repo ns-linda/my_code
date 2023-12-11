@@ -1,0 +1,23 @@
+from typing import List
+
+def min_disks(files: List[int], max_capacity: int) -> int:
+    disks = []  # initialize disks list with one empty disk
+    
+    for file in sorted(files, reverse=True):
+        # find the first disk that can hold the file
+        for disk in disks:
+            if sum(disk) + file < max_capacity:
+                disk.append(file)
+                break
+        else:  # no existing disk can hold the file, need a new one
+            disks.append([file])
+        print(disks)
+    
+    return len(disks)
+
+# example usage
+# files = [4, 2, 3, 3, 6, 1, 1, 1]
+# max_capacity = 7
+files= [100, 200, 300, 400, 500, 600, 700, 800, 900]
+max_capacity=1000
+print(min_disks(files, max_capacity))  # output: 3

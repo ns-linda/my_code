@@ -1,0 +1,19 @@
+from typing import List
+
+
+def min_drives(files: List[int], capacity: int) -> int:
+    disks = []
+    for file in sorted(files, reverse=True):
+        for disk in disks:
+            if sum(disk)+file < capacity:
+                disk.append(file)
+                break
+        else:
+                disks.append([file])
+        print(disks)
+    return len(disks)
+
+
+files = [100, 200, 300, 400, 500, 600, 700, 800, 900]
+capacity = 1000
+print(min_drives(files, capacity))

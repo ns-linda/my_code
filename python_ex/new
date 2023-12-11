@@ -1,0 +1,14 @@
+tasks = {
+    'Mo': ['Cleaning', 'Reading'],
+    'We': ['Workout', 'Guitar lesson'],
+    'Th': ['Stretching', 'Call parents']
+}
+
+days = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+# for day in tasks:
+#     tasks[day].append('meditate')
+print(tasks)
+
+for day in days:
+    tasks.setdefault(day, []).append('meditate')
+print(tasks)

@@ -1,0 +1,35 @@
+from typing import List
+
+def min_drives(files: List[int], capacity: int) -> int:
+    # Sort the files in descending order
+    files.sort(reverse=True)
+
+    # Initialize variables
+    num_drives = 0
+
+    # Loop through the files
+    while files:
+        # Initialize the current drive size to zero
+        drive_size = 0
+        # Loop through the remaining files
+        for i in range(len(files)):
+            # If adding the current file exceeds the capacity
+            if drive_size + files[i] > capacity:
+                # Remove the files that fit on the current drive
+                files = files[i:]
+                break
+            else:
+                # Add the current file to the drive
+                drive_size += files[i]
+        else:
+            # Remove all files, as they all fit on the current drive
+            files = []
+        # Increment the number of drives needed
+        num_drives += 1
+        print(files)
+    return num_drives
+
+# example usage
+files = [100, 200, 300, 400, 500, 600, 700, 800, 900]
+capacity = 1000
+print(min_drives(files, capacity))  # output: 3
