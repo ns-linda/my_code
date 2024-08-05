@@ -1,0 +1,165 @@
+%sntest myriad basic replication test
+
+#This test is to create myriad cluster,deploy and fire the USUI- myriad UI test case in a single wrapper script using sntest automation
+
+description myriad sntest for myriad UUI
+
+# Host definitions
+# Deployment server for myriad cluster
+host myriad distro:ubuntu-server version:22.04.1 arch:x86_64 cores:8 memory:8192
+
+hostgroup all       myriad
+
+lun workarea_data  myriad       64
+
+%ifdef DESTROY
+
+failstep 10m Capture debug info on failure
+command all $sntest/bin/capture_debug_info $spool
+command all $sntest/bin/search_corefiles
+command myriad cd /workarea/myriad; ./myriad cluster destroy basic-MCNAME
+
+%else
+
+failstep 10m Capture debug info on failure
+command all $sntest/bin/capture_debug_info $spool
+command all $sntest/bin/search_corefiles
+
+%endif
+
+%ifndef DEVBRNCH
+
+%define DEVBRNCH develop
+
+%endif
+
+step 10m Apply work-around to remove IPv6 localhost from /etc/hosts
+command all $sntest/bin/ipv6_hosts_hack
+
+step 1m Make workarea directory
+command myriad mkdir /workarea; chmod 777 /workarea
+
+step 10m Create file system for workarea
+command myriad mkfs.ext4 -F -T largefile4 `$sntest/bin/device_by_serial $workarea_data`
+
+step 10m Mount file system for matrix
+command myriad mount `$sntest/bin/device_by_serial $workarea_data` /workarea -o user_xattr
+
+step 10m Remove the mdh repo
+command myriad sed -i 's/deb http:\/\/10.65.165.236\/media\/mdh\/ubuntu-server-20.04.2-x86_64 stable main/\#deb http:\/\/10.65.165.236\/media\/mdh\/ubuntu-server-20.04.2-x86_64 stable main/' /etc/apt/sources.list
+
+step 1m Make workarea directory
+command myriad chmod 777 /workarea
+
+step 10m update the apt repository
+command myriad apt update
+
+step 10m Install curl
+command myriad apt-get install -y apt-transport-https curl
+
+step 10m Get the gpg key for kubernetes
+command myriad curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
+step 10m Install apt-add-repository
+command myriad apt-get install -y software-properties-common
+
+step 10m Add the kubernetes repo
+command myriad apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+
+step 10m Update the apt repo
+command myriad apt update
+
+step 10m Install kubectl
+command myriad apt-get install -y kubectl
+
+step 10m Install git
+command myriad apt-get install -y git
+
+step 10m Install mariadb client dev package
+command myriad apt-get install -y libmariadb-dev-compat libmariadb-dev
+
+step 10m Insatll libvirt and pkg-config
+command myriad apt install -y python3-libvirt pkg-config
+
+#step 10m Install snapd package
+#command myriad apt-get install -y snapd
+
+#step 10m install helm with snap
+#command myriad snap install --classic helm
+
+step 5m Install helm
+command myriad wget https://get.helm.sh/helm-v3.9.3-linux-amd64.tar.gz;\
+tar xvf helm-v3.9.3-linux-amd64.tar.gz; mv linux-amd64/helm /usr/local/bin;\
+helm version
+
+step 10m Install python pip
+command myriad apt-get install -y python3-pip
+
+step 10m install python requests
+command myriad sudo pip3 install requests
+
+step 10m install python pyyaml
+command myriad sudo pip3 install pyyaml
+
+step 10m install python dnspython
+command myriad sudo pip3 install dnspython
+
+step 10m install python pypureomapi
+command myriad sudo pip3 install pypureomapi
+
+step 10m install python pyVmomi
+command myriad sudo pip3 install pyVmomi
+
+step 10m install python mysql
+command myriad sudo pip3 install mysql
+
+#step 10m install python mysql.connector
+#command myriad sudo pip3 install mysql.connector
+
+step 10m install python mysql-connector-python
+command myriad sudo pip3 install mysql-connector-python
+
+step 10m install python gql
+command myriad sudo pip3 install gql
+
+step 10m install python python-dateutil
+command myriad sudo pip3 install python-dateutil
+
+step 10m install python urllib3 upgrade
+command myriad sudo pip3 install urllib3 --upgrade
+
+step 10m install python requests upgrade
+command myriad sudo pip3 install requests --upgrade
+
+step 10m install python requests_toolbelt
+command myriad sudo pip3 install requests_toolbelt
+
+step 10m install prettytable
+command myriad sudo pip3 install prettytable
+
+step 10m install paramiko
+command myriad sudo pip3 install paramiko
+
+step 10m install rich
+command myriad sudo pip3 install rich
+
+step 10m install xmltodict
+command myriad sudo pip3 install xmltodict
+
+step 10m clone myriad
+command myriad cd /workarea; sudo -u USER git config --global submodule.recurse true;\
+sudo -u USER git clone --recurse-submodules git@gitlab.mdh.quantum.com:myriad/myriad.git
+
+step 10m Destroy the myriad cluster
+command myriad cd /workarea/myriad; $sntest/bin/ignore_result ./myriad cluster destroy MCNAME UEMAIL
+
+step 15m Create the myriad cluster
+command myriad cd /workarea/myriad; ./myriad cluster create MCNAME UEMAIL
+
+step 15m Deploy the myriad cluster
+command myriad cd /workarea/myriad; ./myriad cluster deploy -t develop MCNAME
+
+step 20m Sleep before myriad uui is up
+command myriad sleep 1080
+
+# Do whatever is needed for USUI to run on a system (install pkgs, clone USUI)
